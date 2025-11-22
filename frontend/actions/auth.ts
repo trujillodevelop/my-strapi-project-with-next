@@ -15,19 +15,28 @@ const cookieConfig = {
   secure: process.env.NODE_ENV === 'production',
 }
 
-export async function registerUserAction(prevState: FormState, formData: FormData): Promise<FormState> {
+export async function registerUserAction(
+  prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
   console.log('Hello from Register User Action')
 
-  const fields = {
-    username: formData.get('username') as string,
-    password: formData.get('password') as string,
-    email: formData.get('email') as string,
+  const getString = (key: string): string | undefined => {
+    const value = formData.get(key)
+    return typeof value === 'string' ? value : undefined
+  }
+
+  const fields: FormState["data"] = {
+    username: getString('username'),
+    password: getString('password'),
+    email: getString('email'),
+    // identifier: getString('identifier'), // si lo llegaras a usar
   }
 
   const validatedFields = SignupFormSchema.safeParse(fields)
 
   if (!validatedFields.success) {
-    const flattenedErrors = z.flattenError(validatedFields.error)
+    const flattenedErrors = validatedFields.error.flatten()
 
     console.log("Validation errors:", flattenedErrors.fieldErrors)
 
@@ -36,7 +45,7 @@ export async function registerUserAction(prevState: FormState, formData: FormDat
       message: "Validation error",
       strapiErrors: null,
       zodErrors: flattenedErrors.fieldErrors,
-      data: fields
+      data: fields 
     }
   }
 
@@ -48,7 +57,7 @@ export async function registerUserAction(prevState: FormState, formData: FormDat
       message: "Registration error",
       strapiErrors: response?.error,
       zodErrors: null,
-      data: fields
+      data: fields       // ✅ igual aquí
     }
   }
 
